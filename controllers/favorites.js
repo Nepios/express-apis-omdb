@@ -31,10 +31,9 @@ router.get('/:id/comments', function(req, res){
 		where: {id: id},
 		include: [db.comment]
 	}).then(function(fav){
-		console.log(fav.comments);
-	res.render('comments.ejs', {favorite: fav, id:id})
+		res.render('comments.ejs', {favorite: fav, id:id})
 		});
-	});
+});
 
 
 router.post('/:id/comments', function(req, res){
@@ -49,47 +48,40 @@ router.post('/:id/comments', function(req, res){
 		res.redirect('/favorites/' + req.params.id + '/comments');
 	})
 });
-router.get('tags/:id', function(req, res){
-	var id = req.params.id;
-	db.tag.findById(id).then(function(tag){
-		res.render('/tagsfilter', {tags: tag});
-	});
-});
-
-router.get('/tags', function(req, res){
-	var id = req.params.id;
-	db.tag.findAll({where: {tagId: id}}).then(function(tags){
-		res.render('tagsall', {tags: tags});
-	});
-});
-
 
 router.get('/:id/tags', function(req, res){
-	var id = req.params.id;
-	db.favorite.find({
-		where: {id: id},
-		include: [db.tag]
-	}).then(function(fav){
-		res.render('tags.ejs', {favorite: fav});
-	});
+    db.favorite.find({
+        where: {id: req.params.id},
+        include: [db.tag]
+    }).then(function(fav){
+        res.render('tags.ejs', {favorite: fav});
+    });
 });
 
 router.post('/:id/tags', function(req, res){
-	var id = req.params.id
-	var tag = req.body.tag;
-	db.favorite.find({where: {id: id}}).then(function(movie){
-		db.tag.findOrCreate({where: {
-		tag: tag,
-		favoriteId: id},
-		include: [db.favorite]
-	}).spread(function(newTag){
-		db.favoritesTags.findOrCreate({where: {tagId: newTag.id,
-			favoriteId: movie.id}})
-	}).spread(function(){
-				res.redirect('tagsall');	
-			});
-		});
-	});
+ 	db.tag.findOrCreate({where: {tag:req.body.tag}}).spread(function(tag, created){
+    	db.favorite.findById(req.params.id).then(function(favorite){
+        favorite.addTag(tag).then(function(){
+            res.redirect('/favorites/tags');
+        });
+    });
+    });
+});
+
+router.get('/tags', function(req, res){
+    db.tag.findAll().then(function(tags){
+        res.render('tagsall', {tags: tags});ßß
+    });
+});
+
+router.get('/tags/:id', function(req, res){
+    db.tag.findById(req.params.id).then(function(tag){
+        tag.getFavorites().then(function(favorites){
+        res.render('tagsfilter', {tag: tag, favorites:favorites});
+    });
+    });
+});
+
 
 
 module.exports = router;

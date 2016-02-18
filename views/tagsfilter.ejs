@@ -1,2 +1,9 @@
-<h2>Tags Filter</h2>
-<%= tags %>
+<div class="container">
+<h2><%= tag.tag %></h2>
+
+<% favorites.forEach(function(favorite){ %>
+	<div class="well">
+		<h3><%= favorite.title %></h3>
+	</div>
+<% }); %>
+</div>
